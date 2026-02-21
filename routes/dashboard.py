@@ -101,3 +101,35 @@ async def attendance_report(_owner=Depends(require_owner)):
         count = await db.attendance.count_documents({"date": d.isoformat(), "owner_id": _owner["owner_id"]})
         result.append({"day": days[d.weekday() + 1 if d.weekday() < 6 else 0], "attendance": count})
     return result
+
+
+@router.get("/reports/products")
+async def products_report(_owner=Depends(require_owner)):
+    db = get_db()
+    # Aggregate sales from all orders
+    pipeline = [
+        {"$match": {"owner_id": _owner["owner_id"]}},
+        {"$unwind": "$items"},
+        {"$group": {
+            "_id": "$items.supplement_id",
+            "total_sold": {"$sum": "$items.quantity"}
+        }},
+        {"$sort": {"total_sold": -1}},
+        {"$limit": 5}
+    ]
+    sales = await db.orders.aggregate(pipeline).to_list(5)
+    
+    result = []
+    for sale in sales:
+        from bson import ObjectId
+        try:
+            supp = await db.supplements.find_one({"_id": ObjectId(sale["_id"])})
+            if supp:
+                result.append({
+                    "name": supp["name"].split(' ')[0], # Just taking first word like mock data did
+                    "sales": sale["total_sold"]
+                })
+        except Exception:
+            pass
+            
+    return result
