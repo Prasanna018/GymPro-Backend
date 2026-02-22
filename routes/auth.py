@@ -151,9 +151,11 @@ async def change_password(
 async def forgot_password(body: ForgotPasswordRequest):
     db = get_db()
     user = await db.users.find_one({"email": body.email})
-    if not user or user.get("role") != "owner":
-        # For security reasons, don't reveal if user exists or is an owner
-        return {"message": "If this email is registered as an owner account, you will receive a reset token."}
+    if not user:
+        raise HTTPException(status_code=404, detail="Email not found")
+    
+    if user.get("role") != "owner":
+        raise HTTPException(status_code=403, detail="Only owner accounts can request a password reset")
     
     token = secrets.token_urlsafe(32)
     expiry = datetime.utcnow() + timedelta(hours=1)
@@ -164,9 +166,11 @@ async def forgot_password(body: ForgotPasswordRequest):
     )
     
     # Send real email using SMTP
-    await send_reset_email(body.email, token)
+    success = await send_reset_email(body.email, token)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to send reset email. Please try again later.")
     
-    return {"message": "If this email is registered, you will receive a reset token."}
+    return {"message": "Success! Please check your email for the reset link."}
 
 
 @router.post("/reset-password")
