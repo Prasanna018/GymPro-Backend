@@ -7,6 +7,7 @@ from auth import (
 from bson import ObjectId
 import secrets
 from datetime import datetime, timedelta
+from email_utils import send_reset_email
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -162,8 +163,8 @@ async def forgot_password(body: ForgotPasswordRequest):
         {"$set": {"reset_token": token, "reset_token_expiry": expiry}}
     )
     
-    # In a real app, send email. Here, we print to console.
-    print(f"\n[DEBUG] Password reset token for {body.email}: {token}\n")
+    # Send real email using SMTP
+    await send_reset_email(body.email, token)
     
     return {"message": "If this email is registered, you will receive a reset token."}
 
