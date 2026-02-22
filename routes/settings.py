@@ -10,9 +10,10 @@ SETTINGS_KEY = "gym_settings"
 
 
 @router.get("", response_model=GymSettingsOut)
-async def get_settings(_owner=Depends(require_owner)):
+async def get_settings(current_user: dict = Depends(get_current_user)):
     db = get_db()
-    settings = await db.gym_settings.find_one({"owner_id": _owner["owner_id"]})
+    owner_id = current_user["owner_id"]
+    settings = await db.gym_settings.find_one({"owner_id": owner_id})
     if not settings:
         return GymSettingsOut()
     settings.pop("_id", None)
