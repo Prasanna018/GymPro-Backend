@@ -64,25 +64,58 @@ async def get_pending_reminders(_owner=Depends(require_owner)):
 
 @router.post("/email")
 async def send_email_reminders(body: ReminderRequest, _owner=Depends(require_owner)):
-    """Stub: log email reminders. Wire SMTP in production."""
+    """Sends real email reminders to selected members."""
     if not body.member_ids:
         raise HTTPException(status_code=400, detail="No member IDs provided")
-    # In production, integrate with SMTP / SendGrid / etc.
-    print(f"[EMAIL] Sending reminders to: {body.member_ids}")
-    return {
-        "message": f"Email reminders sent to {len(body.member_ids)} member(s)",
-        "member_ids": body.member_ids,
-    }
+    
+    db = get_db()
+    from bson import ObjectId
+    from email_utils import send_reminder_email
+    
+    success_count = 0
+    failed_names = []
+    
+    for m_id in body.member_ids:
+        try:
+            member = await db.members.find_one({"_id": ObjectId(m_id), "owner_id": _owner["owner_id"]})
+            if not member:
+                continue
+            
+            name = member.get("name", "Member")
+            email = member.get("email")
+            due = member.get("due_amount", 0)
+            expiry = member.get("expiry_date", "N/A")
+            
+            if not email:
+                failed_names.append(f"{name} (No Email)")
+                continue
 
+            # Construct professional message
+            if due > 0:
+                subject = "Payment Reminder: GymPro Membership"
+                message = f"We noticed a pending balance of ₹{due} on your account. Please visit the gym to settle your dues and continue enjoying your workouts!"
+            else:
+                subject = "Membership Expiry Reminder"
+                message = f"Your current membership plan is set to expire on {expiry}. Renew today to maintain your progress without interruption!"
 
-@router.post("/whatsapp")
-async def send_whatsapp_reminders(body: ReminderRequest, _owner=Depends(require_owner)):
-    """Stub: log WhatsApp reminders. Wire Twilio in production."""
-    if not body.member_ids:
-        raise HTTPException(status_code=400, detail="No member IDs provided")
-    # In production, integrate with Twilio / WhatsApp Business API
-    print(f"[WHATSAPP] Sending reminders to: {body.member_ids}")
+            sent = await send_reminder_email(
+                to_email=email,
+                member_name=name,
+                subject=subject,
+                message_text=message
+            )
+            
+            if sent:
+                success_count += 1
+            else:
+                failed_names.append(name)
+                
+        except Exception as e:
+            print(f"Error processing reminder for {m_id}: {str(e)}")
+            continue
+
     return {
-        "message": f"WhatsApp reminders sent to {len(body.member_ids)} member(s)",
-        "member_ids": body.member_ids,
+        "message": f"Reminders sent successfully to {success_count} member(s).",
+        "failed": failed_names,
+        "success_count": success_count
     }
