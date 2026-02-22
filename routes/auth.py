@@ -151,9 +151,9 @@ async def change_password(
 async def forgot_password(body: ForgotPasswordRequest):
     db = get_db()
     user = await db.users.find_one({"email": body.email})
-    if not user:
-        # For security reasons, don't reveal if user exists
-        return {"message": "If this email is registered, you will receive a reset token."}
+    if not user or user.get("role") != "owner":
+        # For security reasons, don't reveal if user exists or is an owner
+        return {"message": "If this email is registered as an owner account, you will receive a reset token."}
     
     token = secrets.token_urlsafe(32)
     expiry = datetime.utcnow() + timedelta(hours=1)
