@@ -16,72 +16,72 @@ async def send_reset_email(to_email: str, token: str):
 
     reset_link = f"https://gym-pro-ten.vercel.app/reset-password?token={token}"
     
-    html = f"""
+    html = """
     <!DOCTYPE html>
     <html>
       <head>
         <meta charset="utf-8">
         <style>
-          .container {{
+          .container {
             max-width: 600px;
             margin: 0 auto;
             padding: 40px 20px;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             color: #1a1a1a;
             background-color: #f9fafb;
-          }}
-          .card {{
+          }
+          .card {
             background: #ffffff;
             border-radius: 16px;
             padding: 40px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             border: 1px solid #e5e7eb;
-          }}
-          .logo {{
+          }
+          .logo {
             text-align: center;
             margin-bottom: 32px;
-          }}
-          .logo-text {{
+          }
+          .logo-text {
             font-size: 24px;
             font-weight: 800;
             letter-spacing: -0.025em;
             color: #111827;
             text-transform: uppercase;
-          }}
-          .logo-highlight {{
+          }
+          .logo-highlight {
             color: #6366f1;
-          }}
-          h2 {{
+          }
+          h2 {
             margin: 0 0 16px;
             font-size: 24px;
             font-weight: 700;
             color: #111827;
             text-align: center;
-          }}
-          p {{
+          }
+          p {
             margin: 0 0 24px;
             font-size: 16px;
             line-height: 1.6;
             color: #4b5563;
-          }}
-          .token-box {{
+          }
+          .token-box {
             background: #f3f4f6;
             padding: 24px;
             border-radius: 12px;
             font-family: 'JetBrains Mono', 'Fira Code', monospace;
-            font-size: 20px;
-            font-weight: 700;
+            font-size: 24px;
+            font-weight: 800;
             text-align: center;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.2em;
             color: #111827;
             margin: 32px 0;
-            border: 2px dashed #d1d5db;
-          }}
-          .button-container {{
+            border: 2px dashed #6366f1;
+          }
+          .button-container {
             text-align: center;
             margin: 32px 0;
           }}
-          .button {{
+          .button {
             background-color: #6366f1;
             color: #ffffff !important;
             padding: 16px 32px;
@@ -89,16 +89,15 @@ async def send_reset_email(to_email: str, token: str):
             border-radius: 8px;
             font-weight: 600;
             display: inline-block;
-            transition: background-color 0.2s;
-          }}
-          .footer {{
+          }
+          .footer {
             margin-top: 32px;
             padding-top: 24px;
             border-top: 1px solid #e5e7eb;
             font-size: 14px;
             color: #9ca3af;
             text-align: center;
-          }}
+          }
         </style>
       </head>
       <body>
@@ -112,15 +111,15 @@ async def send_reset_email(to_email: str, token: str):
             <p>We received a request to reset your password. Use the secure token below to proceed:</p>
             
             <div class="token-box">
-              {{token}}
+              {{TOKEN}}
             </div>
             
             <div class="button-container">
-              <a href="{{reset_link}}" class="button">Reset Password</a>
+              <a href="{{LINK}}" class="button">Reset Password</a>
             </div>
             
             <p style="font-size: 14px;">If the button doesn't work, you can copy and paste this link into your browser:</p>
-            <p style="font-size: 12px; word-break: break-all; color: #6366f1;">{{reset_link}}</p>
+            <p style="font-size: 12px; word-break: break-all; color: #6366f1;">{{LINK}}</p>
             
             <div class="footer">
               <p>This token will expire in 1 hour. If you didn't request this, you can safely ignore this email.</p>
@@ -130,7 +129,7 @@ async def send_reset_email(to_email: str, token: str):
         </div>
       </body>
     </html>
-    """.replace("{{token}}", token).replace("{{reset_link}}", reset_link)
+    """.replace("{{TOKEN}}", token).replace("{{LINK}}", reset_link)
 
     try:
         async with httpx.AsyncClient() as client:

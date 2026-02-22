@@ -157,7 +157,7 @@ async def forgot_password(body: ForgotPasswordRequest):
     if user.get("role") != "owner":
         raise HTTPException(status_code=403, detail="Only owner accounts can request a password reset")
     
-    token = secrets.token_urlsafe(32)
+    token = secrets.token_hex(4).upper()
     expiry = datetime.utcnow() + timedelta(hours=1)
     
     await db.users.update_one(
