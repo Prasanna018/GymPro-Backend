@@ -1,4 +1,5 @@
 import smtplib
+import anyio
 import os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -9,7 +10,7 @@ load_dotenv()
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_USER = os.getenv("SMTP_USER")
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "").replace(" ", "").strip()
 
 async def send_reset_email(to_email: str, token: str):
     if not SMTP_USER or not SMTP_PASSWORD:
@@ -67,12 +68,14 @@ async def send_reset_email(to_email: str, token: str):
     msg.attach(MIMEText(text, "plain"))
     msg.attach(MIMEText(html, "html"))
 
-    try:
-        # Use explicit context manager for SMTP
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-            server.starttls()  # Secure the connection
+    def _send():
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as server:
+            server.starttls()
             server.login(SMTP_USER, SMTP_PASSWORD)
             server.send_message(msg)
+
+    try:
+        await anyio.to_thread.run_sync(_send)
         print(f"✅ Reset email sent successfully to {to_email}")
         return True
     except Exception as e:
