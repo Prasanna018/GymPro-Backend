@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from database import get_db
 from models.settings import GymSettingsUpdate, GymSettingsOut
-from auth import require_owner
+from auth import require_owner, get_current_user
 
 router = APIRouter(prefix="/settings", tags=["Settings"])
 
