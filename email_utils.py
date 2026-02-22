@@ -171,6 +171,7 @@ async def send_reset_email(to_email: str, token: str):
     """.replace("{{TOKEN}}", token).replace("{{LINK}}", reset_link)
 
     try:
+        subject = "Reset Your GymPro Password"
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 "https://api.resend.com/emails",
