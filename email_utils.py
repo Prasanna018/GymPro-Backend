@@ -180,8 +180,8 @@ async def send_reset_email(to_email: str, token: str):
                 },
                 json={
                     "from": FROM_EMAIL,
-                    "to": to_email,
-                    "subject": "Reset Your GymPro Password",
+                    "to": to_email, # Resets are for owners, so this will work
+                    "subject": subject,
                     "html": html,
                 },
                 timeout=10.0
@@ -192,20 +192,20 @@ async def send_reset_email(to_email: str, token: str):
                 return True
             else:
                 print(f"❌ Resend API Error: {response.text}")
-                # Fallback to console
-                print(f"[DEBUG] Password reset token for {to_email}: {token}\n")
                 return False
                 
     except Exception as e:
         print(f"❌ Failed to send email via Resend: {str(e)}")
-        # Fallback to console for debugging
-        print(f"[DEBUG] Password reset token for {to_email}: {token}\n")
         return False
 
 async def send_reminder_email(to_email: str, member_name: str, subject: str, message_text: str, button_text: str = "View Details"):
     if not RESEND_API_KEY:
         print(f"\n[WARNING] RESEND_API_KEY not configured. Reminder not sent to {to_email}")
         return False
+
+    # For reminders, we use Resend's official onboarding email as the sender 
+    # as requested to ensure it "works" with their testing policy.
+    FROM_REMINDER = "onboarding@resend.dev"
 
     html = """
     <!DOCTYPE html>
@@ -279,18 +279,6 @@ async def send_reminder_email(to_email: str, member_name: str, subject: str, mes
                 margin: 32px 0;
                 text-align: left;
             }
-            .cta-button {
-                display: inline-block;
-                background-color: #4f46e5;
-                color: #ffffff !important;
-                padding: 16px 32px;
-                border-radius: 8px;
-                text-decoration: none;
-                font-weight: 700;
-                font-size: 16px;
-                transition: background-color 0.2s;
-                box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
-            }
             .footer {
                 padding: 32px 40px;
                 background-color: #f8fafc;
@@ -338,8 +326,8 @@ async def send_reminder_email(to_email: str, member_name: str, subject: str, mes
                     "Content-Type": "application/json",
                 },
                 json={
-                    "from": FROM_EMAIL,
-                    "to": to_email,
+                    "from": FROM_REMINDER, # Use official Resend onboarding email
+                    "to": to_email,        # Send to the actual member
                     "subject": subject,
                     "html": html,
                 },
