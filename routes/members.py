@@ -168,6 +168,16 @@ async def update_member(member_id: str, body: MemberUpdate, _owner=Depends(requi
 
     update_data = {k: v for k, v in body.model_dump().items() if v is not None}
 
+    # Handle password update if provided by admin
+    if "password" in update_data:
+        new_password = update_data.pop("password")
+        if new_password:
+            new_hash = get_password_hash(new_password)
+            await db.users.update_one(
+                {"_id": oid},
+                {"$set": {"hashed_password": new_hash}}
+            )
+
     # If plan changed, recalculate expiry date
     if "plan_id" in update_data:
         plan = await db.plans.find_one({"_id": ObjectId(update_data["plan_id"]), "owner_id": _owner["owner_id"]})

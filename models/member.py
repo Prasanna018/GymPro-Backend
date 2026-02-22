@@ -33,6 +33,7 @@ class MemberUpdate(BaseModel):
     weight: Optional[float] = None
     goal: Optional[str] = None
     avatar: Optional[str] = None
+    password: Optional[str] = None
 
 
 class MemberSelfUpdate(BaseModel):

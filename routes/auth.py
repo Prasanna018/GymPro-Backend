@@ -1,10 +1,12 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from database import get_db
-from models.user import UserLogin, TokenResponse, UserOut, ChangePasswordRequest, UserRegister
+from models.user import UserLogin, TokenResponse, UserOut, ChangePasswordRequest, UserRegister, ForgotPasswordRequest, ResetPasswordRequest
 from auth import (
     verify_password, get_password_hash, create_access_token, get_current_user
 )
 from bson import ObjectId
+import secrets
+from datetime import datetime, timedelta
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -142,3 +144,45 @@ async def change_password(
         {"$set": {"hashed_password": new_hash}}
     )
     return {"message": "Password updated successfully"}
+
+
+@router.post("/forgot-password")
+async def forgot_password(body: ForgotPasswordRequest):
+    db = get_db()
+    user = await db.users.find_one({"email": body.email})
+    if not user:
+        # For security reasons, don't reveal if user exists
+        return {"message": "If this email is registered, you will receive a reset token."}
+    
+    token = secrets.token_urlsafe(32)
+    expiry = datetime.utcnow() + timedelta(hours=1)
+    
+    await db.users.update_one(
+        {"email": body.email},
+        {"$set": {"reset_token": token, "reset_token_expiry": expiry}}
+    )
+    
+    # In a real app, send email. Here, we print to console.
+    print(f"\n[DEBUG] Password reset token for {body.email}: {token}\n")
+    
+    return {"message": "If this email is registered, you will receive a reset token."}
+
+
+@router.post("/reset-password")
+async def reset_password(body: ResetPasswordRequest):
+    db = get_db()
+    user = await db.users.find_one({
+        "reset_token": body.token,
+        "reset_token_expiry": {"$gt": datetime.utcnow()}
+    })
+    
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+    
+    new_hash = get_password_hash(body.password)
+    await db.users.update_one(
+        {"_id": user["_id"]},
+        {"$set": {"hashed_password": new_hash}, "$unset": {"reset_token": "", "reset_token_expiry": ""}}
+    )
+    
+    return {"message": "Password has been reset successfully"}
