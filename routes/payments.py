@@ -27,6 +27,8 @@ def payment_doc_to_out(doc: dict) -> PaymentOut:
         plan_id=doc["plan_id"],
         method=doc.get("method", "Cash"),
         invoice_id=doc.get("invoice_id"),
+        razorpay_order_id=doc.get("razorpay_order_id"),
+        razorpay_payment_id=doc.get("razorpay_payment_id"),
     )
 
 

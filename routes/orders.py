@@ -18,6 +18,9 @@ def order_doc_to_out(doc: dict) -> OrderOut:
         total=doc["total"],
         date=doc["date"],
         status=doc["status"],
+        payment_status=doc.get("payment_status", "pending"),
+        razorpay_order_id=doc.get("razorpay_order_id"),
+        razorpay_payment_id=doc.get("razorpay_payment_id"),
     )
 
 

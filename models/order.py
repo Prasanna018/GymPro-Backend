@@ -19,6 +19,9 @@ class OrderOut(BaseModel):
     total: float
     date: str
     status: str
+    payment_status: Optional[str] = "pending"  # pending, paid
+    razorpay_order_id: Optional[str] = None
+    razorpay_payment_id: Optional[str] = None
 
     class Config:
         populate_by_name = True

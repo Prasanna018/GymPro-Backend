@@ -17,6 +17,7 @@ from routes.orders import router as orders_router
 from routes.dashboard import router as dashboard_router
 from routes.settings import router as settings_router
 from routes.reminders import router as reminders_router
+from routes.razorpay_payments import router as razorpay_router
 
 load_dotenv()
 
@@ -58,6 +59,7 @@ app.include_router(orders_router)
 app.include_router(dashboard_router)
 app.include_router(settings_router)
 app.include_router(reminders_router)
+app.include_router(razorpay_router)
 
 
 @app.get("/", tags=["Health"])
